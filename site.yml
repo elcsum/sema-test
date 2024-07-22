@@ -1,5 +1,5 @@
 ---
-- hosts: ubuntu
+- hosts: apache
   become: true
   tasks:
     - name: Print OS info
