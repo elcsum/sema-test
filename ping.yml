@@ -1,7 +1,7 @@
 ---
-- name: Überprüfen, ob der Zielserver online ist
-  hosts: all
+- name: check, if server is available
+  hosts: hosts
   gather_facts: no
   tasks:
-    - name: Ping den Zielserver
+    - name: ping server
       ping:
