@@ -1,0 +1,27 @@
+---
+- name: restart hosts
+  hosts: web_servers
+  become: yes  
+  tasks:
+    - name: restart of the host
+      command: /sbin/reboot
+      async: 1
+      poll: 0
+      ignore_errors: true
+      register: reboot_command
+
+    - name: wating 5 seconds
+      pause:
+        seconds: 5
+
+    - name: waiting, till host is online
+      local_action:
+        module: wait_for
+        host: "{{ inventory_hostname }}"
+        port: 22
+        delay: 10  
+        timeout: 300  
+        state: started
+
+    - name: Host is online now
+      ping:
