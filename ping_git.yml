@@ -1,6 +1,6 @@
 ---
 - name: check, if server is available
-  hosts: server
+  hosts: servers
   gather_facts: no
   tasks:
     - name: ping server
