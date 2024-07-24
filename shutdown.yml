@@ -1,15 +1,15 @@
 ---
-- name: Hosts herunterfahren
+- name: Hosts shutdown
   hosts: web_servers
-  become: yes  # Verwende "become" für erhöhte Rechte
+  become: yes
   tasks:
-    - name: Host herunterfahren
+    - name: Host shutdown
       command: /sbin/shutdown -h now
       async: 1
       poll: 0
       ignore_errors: true
       register: shutdown_command
 
-    - name: Bestätigung der Ausführung des Herunterfahrens
+    - name: acknowledge
       debug:
-        msg: "Host {{ inventory_hostname }} wurde zum Herunterfahren angewiesen."
+        msg: "Host {{ inventory_hostname }} was shut down"
