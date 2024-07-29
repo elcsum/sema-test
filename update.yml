@@ -2,6 +2,7 @@
   - hosts: web_servers
     ignore_errors: yes
     ignore_unreachable: yes
+    become: yes
 
     tasks:
     - name: Update apt repositories and cache
