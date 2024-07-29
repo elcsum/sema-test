@@ -1,6 +1,6 @@
 ---
-- name: Neustarten des Hosts
-  hosts: web_servers
+- name: Neustarten des Hosts und Überprüfen der Verfügbarkeit
+  hosts: all
   become: yes  # Verwende "become" für erhöhte Rechte
   tasks:
     - name: Neustart des Hosts
@@ -14,19 +14,10 @@
       pause:
         seconds: 10
 
-    - name: Überprüfe, ob der Host wieder verfügbar ist (wiederhole alle 5 Sekunden)
-      retries: 60
-      delay: 5
-      until: result is succeeded
-      block:
-        - name: Überprüfe, ob der Host wieder verfügbar ist
-          wait_for:
-            host: "{{ inventory_hostname }}"
-            port: 22
-            state: started
-            timeout: 1
-          register: result
-          ignore_errors: true
+    - name: Überprüfe, ob der Host wieder verfügbar ist
+      wait_for_connection:
+        delay: 5
+        timeout: 300
 
     - name: Bestätige, dass der Host wieder online ist
       ping:
