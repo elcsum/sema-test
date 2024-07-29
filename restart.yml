@@ -1,27 +1,23 @@
 ---
-- name: Neustarten des Hosts
-  hosts: web_servers
-  become: yes  # Verwende "become" für erhöhte Rechte
+- name: Reboot the host and check availability
+  hosts: all
+  become: yes  # Use "become" to gain elevated privileges
   tasks:
-    - name: Neustart des Hosts
+    - name: Reboot the host
       command: /sbin/reboot
       async: 1
       poll: 0
       ignore_errors: true
       register: reboot_command
 
-    - name: Warte 10 Sekunden, um den Neustart zu ermöglichen
+    - name: Wait 10 seconds to allow the reboot to initiate
       pause:
         seconds: 10
 
-    - name: Überprüfe, ob der Host wieder verfügbar ist (wiederhole alle 5 Sekunden)
-      wait_for:
-        host: "{{ inventory_hostname }}"
-        port: 22
-        state: started
-        delay: 5
+    - name: Check if the host is available
+      wait_for_connection:
+        delay: 3
         timeout: 300
-      register: result
 
-    - name: Bestätige, dass der Host wieder online ist
+    - name: Confirm that the host is back online
       ping:
