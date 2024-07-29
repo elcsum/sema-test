@@ -14,7 +14,7 @@
       pause:
         seconds: 10
 
-    - name: Check if the host is available (repeat every 3 seconds)
+    - name: Check if the host is available
       wait_for_connection:
         delay: 3
         timeout: 300
