@@ -10,9 +10,9 @@
       ignore_errors: true
       register: reboot_command
 
-    - name: Warte 5 Sekunden, um den Neustart zu ermöglichen
+    - name: Warte 10 Sekunden, um den Neustart zu ermöglichen
       pause:
-        seconds: 5
+        seconds: 10
 
     - name: Überprüfe, ob der Host wieder verfügbar ist (wiederhole alle 5 Sekunden)
       wait_for:
@@ -23,7 +23,7 @@
       register: result
       until: result is succeeded
       retries: 60
-      delay: 2
+      delay: 5
 
     - name: Bestätige, dass der Host wieder online ist
       ping:
