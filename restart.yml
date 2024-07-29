@@ -1,27 +1,27 @@
 ---
-- name: restart hosts
+- name: Neustarten des Hosts
   hosts: web_servers
-  become: yes  
+  become: yes  # Verwende "become" für erhöhte Rechte
   tasks:
-    - name: restart of the host
+    - name: Neustart des Hosts
       command: /sbin/reboot
       async: 1
       poll: 0
       ignore_errors: true
       register: reboot_command
 
-    - name: wating 5 seconds
+    - name: Warte 10 Sekunden, um den Neustart zu ermöglichen
       pause:
-        seconds: 5
+        seconds: 10
 
-    - name: waiting, till host is online
-      local_action:
-        module: wait_for
+    - name: Überprüfe, ob der Host wieder verfügbar ist (wiederhole alle 5 Sekunden)
+      wait_for:
         host: "{{ inventory_hostname }}"
         port: 22
-        delay: 10  
-        timeout: 300  
         state: started
+        delay: 5
+        timeout: 300
+      register: result
 
-    - name: Host is online now
+    - name: Bestätige, dass der Host wieder online ist
       ping:
