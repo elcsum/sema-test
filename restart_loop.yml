@@ -12,11 +12,11 @@
 
     - name: Warte 10 Sekunden, um den Neustart zu ermöglichen
       pause:
-        seconds: 10
+        seconds: 3
 
     - name: Überprüfe, ob der Host wieder verfügbar ist
       wait_for_connection:
-        delay: 5
+        delay: 3
         timeout: 300
 
     - name: Bestätige, dass der Host wieder online ist
