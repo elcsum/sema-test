@@ -4,7 +4,7 @@
   become: yes
   tasks:
     - name: Speedtest im menschenlesbaren Format ausführen und Ergebnis in Datei speichern
-      shell: speedtest --format=brief > /tmp/speedtest_result.txt
+      shell: speedtest --format=human-readable > /tmp/speedtest_result.txt
       register: speedtest_result
       async: 60
       poll: 0
