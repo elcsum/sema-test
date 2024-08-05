@@ -1,39 +1,42 @@
 ---
-- name: Speedtest und JSON-Daten modifizieren
+- name: Speedtest ausführen und Ergebnis speichern
   hosts: speedtest
-  vars:
-    # Pfad zur Zählerdatei
-    counter_file: "/tmp/speedtest.txt"
-  
+  become: yes
   tasks:
-    - name: Führe den Speedtest aus und speichere die Daten als JSON
-      command: speedtest --json
-      register: speedtest_result
-      async: 300  # 5 Minuten Zeitlimit für die Async-Aufgabe
-      poll: 10    # Alle 10 Sekunden nach dem Status fragen
+    - name: Aktuelles Datum und Uhrzeit erfassen
+      set_fact:
+        timestamp: "{{ ansible_date_time.iso8601_basic | regex_replace('[^0-9]', '') }}"
 
-    - name: Warten, bis der Speedtest abgeschlossen ist
+    - name: Speedtest im JSON-Format ausführen und Ergebnis in Datei speichern
+      shell: speedtest --format=json > /tmp/speedtest_{{ timestamp }}.json
+      register: speedtest_result
+      async: 60
+      poll: 0
+
+    - name: Auf den Abschluss des Speedtests warten
       async_status:
         jid: "{{ speedtest_result.ansible_job_id }}"
       register: job_result
       until: job_result.finished
-      retries: 30  # Anzahl der Versuche
-      delay: 3    # Wartezeit zwischen den Versuchen in Sekunden
+      retries: 15
+      delay: 3
 
-    - name: Zeige das rohe JSON-Ergebnis
-      debug:
-        msg: "{{ speedtest_result.stdout }}"
+    - name: Ergebnis aus der JSON-Datei lesen
+      command: cat /tmp/speedtest_{{ timestamp }}.json
+      register: speedtest_output
+      when: job_result.finished
 
-    - name: Modifiziere die JSON-Daten
+    - name: JSON-Daten filtern
       set_fact:
-        modified_speedtest_data: "{{ speedtest_result.stdout | from_json | json_query('{"download": download.bandwidth, "upload": upload.bandwidth, "timestamp": timestamp}') }}"
+        filtered_result: >-
+          {{
+            (speedtest_output.stdout | from_json) |
+            dict2items |
+            selectattr('key', 'in', ['download', 'server', 'upload']) |
+            items2dict
+          }}
 
-    - name: Speichere die modifizierten JSON-Daten in einer Datei
-      copy:
-        content: "{{ modified_speedtest_data | to_json | indent(2) }}"
-        dest: "/path/to/speedtest_{{ current_number }}.json"
-
-    - name: Update den Zählerstand
-      copy:
-        content: "{{ current_number }}"
-        dest: "{{ counter_file }}"
+    - name: Gefiltertes Speedtest Ergebnis anzeigen
+      debug:
+        msg: "{{ filtered_result | to_json }}"
+      when: filtered_result is defined
