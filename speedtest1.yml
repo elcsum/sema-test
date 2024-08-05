@@ -1,34 +1,12 @@
 ---
-- name: Ookla Speedtest auf dem Zielserver ausführen
+- name: Speedtest ausführen und Ergebnis anzeigen
   hosts: speedtest
   become: yes
   tasks:
-    - name: Überprüfen, ob speedtest-cli installiert ist
-      command: speedtest --version
-      register: speedtest_installed
-      ignore_errors: true
-
-    - name: speedtest-cli installieren, falls nicht vorhanden
-      apt:
-        name: curl
-        state: present
-      when: speedtest_installed.failed
-
-    - name: Ookla Speedtest CLI installieren (falls nicht vorhanden)
-      command: curl -s https://install.speedtest.net/app/cli/install.deb.sh | bash && apt-get install speedtest -y
-      when: speedtest_installed.failed
-
-    - name: Ookla Speedtest ausführen
+    - name: Speedtest ausführen
       command: speedtest --format=json
       register: speedtest_result
-      ignore_errors: true
-
-    - name: Überprüfen, ob der Speedtest erfolgreich war
-      fail:
-        msg: "Speedtest konnte nicht erfolgreich ausgeführt werden."
-      when: speedtest_result.rc != 0
 
     - name: Speedtest Ergebnis anzeigen
       debug:
         msg: "{{ speedtest_result.stdout }}"
-      when: speedtest_result.stdout is defined
