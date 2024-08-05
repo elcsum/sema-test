@@ -5,9 +5,9 @@
   tasks:
     - name: Aktuelles Datum und Uhrzeit erfassen
       set_fact:
-        timestamp: "{{ ansible_date_time.iso8601_basic | regex_replace('[^0-9]', '') }}"
-        formatted_date: "{{ ansible_date_time.iso8601 | to_datetime('%Y-%m-%dT%H:%M:%S') | strftime('%d/%m/%Y') }}"
-        formatted_time: "{{ ansible_date_time.iso8601 | to_datetime('%Y-%m-%dT%H:%M:%S') | strftime('%H:%M') }}"
+        # Erfasst Datum und Uhrzeit in den gewünschten Formaten
+        formatted_date: "{{ ansible_date_time.iso8601 | to_datetime('%Y-%m-%dT%H:%M:%S') | strftime('%d-%m-%Y') }}"
+        formatted_time: "{{ ansible_date_time.iso8601 | to_datetime('%Y-%m-%dT%H:%M:%S') | strftime('%H-%M') }}"
 
     - name: Speedtest im JSON-Format ausführen und Ergebnis in Datei speichern
       shell: speedtest --format=json > /tmp/speedtest_{{ formatted_date }}_{{ formatted_time }}.json
