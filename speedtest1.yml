@@ -15,7 +15,7 @@
       when: speedtest_installed.failed
 
     - name: Ookla Speedtest CLI installieren (falls nicht vorhanden)
-      command: curl -s https://install.speedtest.net/app/cli/install.deb.sh | sudo bash && sudo apt-get install speedtest -y
+      command: curl -s https://install.speedtest.net/app/cli/install.deb.sh | bash && apt-get install speedtest -y
       when: speedtest_installed.failed
 
     - name: Ookla Speedtest ausführen
@@ -25,10 +25,10 @@
 
     - name: Überprüfen, ob der Speedtest erfolgreich war
       fail:
-        msg: "Speedtest konnte nicht ausge erfolgreich ausgeführt werden"
-      when: speedtest_result is failed
+        msg: "Speedtest konnte nicht erfolgreich ausgeführt werden."
+      when: speedtest_result.rc != 0
 
     - name: Speedtest Ergebnis anzeigen
       debug:
         msg: "{{ speedtest_result.stdout }}"
-      when: speedtest_result is succeeded
+      when: speedtest_result.stdout is defined
