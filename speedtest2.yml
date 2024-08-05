@@ -3,9 +3,38 @@
   hosts: speedtest
   become: yes
   tasks:
-    - name: Speedtest ausführen
-      command: speedtest --format=json > /tmp/result.json
+    - name: Speedtest im menschenlesbaren Format ausführen und Ergebnis in Datei speichern
+      shell: speedtest --format=human-readable | tee /tmp/speedtest_result.txt
+      register: speedtest_result
       async: 60
       poll: 0
-      register: speedtest_job
 
+    - name: Auf den Abschluss des Speedtests warten
+      async_status:
+        jid: "{{ speedtest_result.ansible_job_id }}"
+      register: job_result
+      until: job_result.finished
+      retries: 15
+      delay: 3
+
+    - name: Formatierungs-Skript ausführen
+      copy:
+        content: |
+          #!/bin/bash
+          sed -e 's/^/\n/' -e 's/ / /g' /tmp/speedtest_result.txt > /tmp/speedtest_result_formatted.txt
+        dest: /tmp/format_speedtest.sh
+        mode: '0755'
+
+    - name: Formatierungs-Skript ausführen
+      command: /tmp/format_speedtest.sh
+      when: job_result.finished
+
+    - name: Ergebnis aus der formatierten Datei anzeigen
+      command: cat /tmp/speedtest_result_formatted.txt
+      register: speedtest_output
+      when: job_result.finished
+
+    - name: Speedtest Ergebnis anzeigen
+      debug:
+        msg: "{{ speedtest_output.stdout }}"
+      when: speedtest_output.stdout is defined
