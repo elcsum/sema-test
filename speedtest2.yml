@@ -4,7 +4,7 @@
   become: yes
   tasks:
     - name: Speedtest ausführen
-      command: speedtest --format=human-readable > /root/result.txt
+      command: speedtest --format=human-readable > /tmp/result.txt
       async: 60
       poll: 0
       register: speedtest_job
