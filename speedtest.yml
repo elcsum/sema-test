@@ -1,0 +1,17 @@
+---
+- name: Ookla Speedtest auf dem Zielserver ausführen
+  hosts: speedtest
+  become: yes
+  tasks:
+    - name: Überprüfen, ob speedtest-cli installiert ist
+      command: speedtest --version
+      register: speedtest_installed
+      ignore_errors: true
+
+    - name: Ookla Speedtest ausführen
+      command: speedtest --format=json
+      register: speedtest_result
+
+    - name: Speedtest Ergebnis anzeigen
+      debug:
+        msg: "{{ speedtest_result.stdout }}"
