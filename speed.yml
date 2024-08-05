@@ -5,12 +5,13 @@
   tasks:
     - name: Aktuelles Datum und Uhrzeit erfassen
       set_fact:
-        # Erfasst Datum und Uhrzeit in den gewünschten Formaten
+        # Erfasst Datum und Uhrzeit im Standardformat
+        iso_timestamp: "{{ ansible_date_time.iso8601 }}"
         formatted_date: "{{ ansible_date_time.iso8601 | to_datetime('%Y-%m-%dT%H:%M:%S') | strftime('%d-%m-%Y') }}"
-        formatted_time: "{{ ansible_date_time.iso8601 | to_datetime('%Y-%m-%dT%H:%M:%S') | strftime('%H-%M') }}"
+        formatted_time: "{{ ansible_date_time.iso8601 | to_datetime('%Y-%m-%dT%H:%M:%S') | strftime('%H:%M') }}"
 
     - name: Speedtest im JSON-Format ausführen und Ergebnis in Datei speichern
-      shell: speedtest --format=json > /tmp/speedtest_{{ formatted_date }}_{{ formatted_time }}.json
+      shell: speedtest --format=json > /tmp/speedtest.json
       register: speedtest_result
       async: 60
       poll: 0
@@ -24,21 +25,28 @@
       delay: 3
 
     - name: Ergebnis aus der JSON-Datei lesen
-      command: cat /tmp/speedtest_{{ formatted_date }}_{{ formatted_time }}.json
+      command: cat /tmp/speedtest.json
       register: speedtest_output
       when: job_result.finished
 
-    - name: JSON-Daten filtern
+    - name: JSON-Daten filtern und Zeitstempel formatieren
       set_fact:
         filtered_result: >-
           {{
             (speedtest_output.stdout | from_json) |
+            combine({'timestamp': formatted_date ~ ' ' ~ formatted_time}) |
             dict2items |
-            selectattr('key', 'in', ['download', 'server', 'upload']) |
+            selectattr('key', 'in', ['download', 'server', 'upload', 'timestamp']) |
             items2dict
           }}
 
-    - name: Gefiltertes Speedtest Ergebnis anzeigen
+    - name: Gefiltertes und formatiertes Speedtest Ergebnis anzeigen
       debug:
         msg: "{{ filtered_result | to_json }}"
+      when: filtered_result is defined
+
+    - name: Formatiertes JSON in eine neue Datei speichern
+      copy:
+        content: "{{ filtered_result | to_json | indent(2) }}"
+        dest: "/tmp/speedtest_filtered_{{ formatted_date }}_{{ formatted_time }}.json"
       when: filtered_result is defined
