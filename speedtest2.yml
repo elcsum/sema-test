@@ -1,0 +1,11 @@
+---
+- name: Speedtest ausführen und Ergebnis speichern
+  hosts: speedtest
+  become: yes
+  tasks:
+    - name: Speedtest ausführen
+      command: speedtest --format=json > /tmp/result.json
+      async: 60
+      poll: 0
+      register: speedtest_job
+
