@@ -1,0 +1,17 @@
+---
+- name: Upgrade Proxmox Distribution
+  hosts: all
+  become: yes
+  become_method: su
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Dist-Upgrade durchführen
+      apt:
+        upgrade: dist
+        force_apt_get: yes
+        allow_unauthenticated: yes
+        autoremove: yes
+        autoclean: yes
