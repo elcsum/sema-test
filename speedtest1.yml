@@ -1,6 +1,6 @@
 ---
 - name: Ookla Speedtest auf dem Zielserver ausführen
-  hosts: all
+  hosts: speedtest
   become: yes
   tasks:
     - name: Überprüfen, ob speedtest-cli installiert ist
