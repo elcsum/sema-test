@@ -1,17 +1,28 @@
 ---
-- name: Ookla Speedtest auf dem Zielserver ausführen
+- name: Speedtest ausführen und Ergebnis speichern
   hosts: speedtest
   become: yes
   tasks:
-    - name: Überprüfen, ob speedtest-cli installiert ist
-      command: speedtest --version
-      register: speedtest_installed
-      ignore_errors: true
-
-    - name: Ookla Speedtest ausführen
-      command: speedtest --format=json
+    - name: Speedtest im menschenlesbaren Format ausführen und Ergebnis in Datei speichern
+      shell: speedtest --format=brief > /tmp/speedtest_result.txt
       register: speedtest_result
+      async: 60
+      poll: 0
+
+    - name: Auf den Abschluss des Speedtests warten
+      async_status:
+        jid: "{{ speedtest_result.ansible_job_id }}"
+      register: job_result
+      until: job_result.finished
+      retries: 15
+      delay: 2
+
+    - name: Ergebnis aus der Datei anzeigen
+      command: cat /tmp/speedtest_result.txt
+      register: speedtest_output
+      when: job_result.finished
 
     - name: Speedtest Ergebnis anzeigen
       debug:
-        msg: "{{ speedtest_result.stdout }}"
+        msg: "{{ speedtest_output.stdout }}"
+      when: speedtest_output.stdout is defined
