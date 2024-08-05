@@ -1,0 +1,32 @@
+---
+- name: Speedtest ausführen und Ergebnis speichern
+  hosts: speedtest
+  become: yes
+  tasks:
+    - name: Aktuelles Datum und Uhrzeit erfassen
+      set_fact:
+        timestamp: "{{ ansible_date_time.iso8601_basic | regex_replace('[^0-9]', '') }}"
+
+    - name: Speedtest im JSON-Format ausführen und Ergebnis in Datei speichern
+      shell: speedtest --format=json > /tmp/speedtest_{{ timestamp }}.json
+      register: speedtest_result
+      async: 60
+      poll: 0
+
+    - name: Auf den Abschluss des Speedtests warten
+      async_status:
+        jid: "{{ speedtest_result.ansible_job_id }}"
+      register: job_result
+      until: job_result.finished
+      retries: 15
+      delay: 3
+
+    - name: Ergebnis aus der JSON-Datei anzeigen
+      command: cat /tmp/speedtest_{{ timestamp }}.json
+      register: speedtest_output
+      when: job_result.finished
+
+    - name: Speedtest Ergebnis anzeigen
+      debug:
+        msg: "{{ speedtest_output.stdout }}"
+      when: speedtest_output.stdout is defined
