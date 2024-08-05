@@ -1,0 +1,42 @@
+---
+- name: Speedtest und JSON-Daten modifizieren
+  hosts: localhost
+  vars:
+    # Pfad zur Zählerdatei
+    counter_file: "/tmp/speedtest.txt"
+  
+  tasks:
+    - name: Lese den aktuellen Zählerstand
+      slurp:
+        src: "{{ counter_file }}"
+      register: counter_content
+      failed_when: false
+      changed_when: false
+
+    - name: Setze den Zählerstand auf 1, falls die Zählerdatei nicht existiert
+      set_fact:
+        current_number: 1
+      when: counter_content.content is not defined or counter_content.content | b64decode | length == 0
+
+    - name: Setze den aktuellen Zählerstand aus der Datei
+      set_fact:
+        current_number: "{{ (counter_content.content | b64decode | int) + 1 }}"
+      when: counter_content.content is defined and counter_content.content | b64decode | length > 0
+
+    - name: Führe den Speedtest aus und speichere die Daten als JSON
+      command: speedtest --json
+      register: speedtest_result
+
+    - name: Modifiziere die JSON-Daten
+      set_fact:
+        modified_speedtest_data: "{{ speedtest_result.stdout | from_json | json_query('{"download": download.bandwidth, "upload": upload.bandwidth, "timestamp": timestamp}') }}"
+
+    - name: Speichere die modifizierten JSON-Daten in einer Datei
+      copy:
+        content: "{{ modified_speedtest_data | to_json | indent(2) }}"
+        dest: "/path/to/speedtest_{{ current_number }}.json"
+
+    - name: Update den Zählerstand
+      copy:
+        content: "{{ current_number }}"
+        dest: "{{ counter_file }}"
